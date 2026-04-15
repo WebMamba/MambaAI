@@ -1,0 +1,19 @@
+{
+    "name": "webmamba/mambaai",
+    "autoload": {
+        "psr-4": {
+            "MambaAi\\Version_2\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Matheo Daninos",
+            "email": "matheo.daninos@gmail.com"
+        }
+    ],
+    "require": {
+        "symfony/ai-agent": "^0.7.0",
+        "symfony/ai-anthropic-platform": "^0.7.0",
+        "symfony/finder": "^8.0"
+    }
+}

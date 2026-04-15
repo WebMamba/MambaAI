@@ -1,0 +1,58 @@
+services:
+    MambaAi\Version_2\AgentKernel:
+        arguments:
+            - '@event_dispatcher'
+            - '@MambaAi\Version_2\Channel\ChannelResolverInterface'
+            - '@MambaAi\Version_2\AgentResolverInterface'
+            - '@MambaAi\Version_2\PromptBuilderInterface'
+
+    MambaAi\Version_2\AgentLoader:
+        arguments:
+            $builder: '@MambaAi\Version_2\AgentBuilderInterface'
+            $agentsDir: '%mamba_ai.agents_dir%'
+
+    MambaAi\Version_2\AgentResolver:
+        arguments:
+            $loader: '@MambaAi\Version_2\AgentLoaderInterface'
+
+    MambaAi\Version_2\PromptBuilder:
+        arguments:
+            $dispatcher: '@event_dispatcher'
+            $systemParts: !tagged_iterator mamba_ai.system_prompt_part
+            $userParts: !tagged_iterator mamba_ai.user_prompt_part
+
+    # --- Default system prompt parts ---
+    MambaAi\Version_2\Prompt\Part\AgentSystemPart:
+        tags:
+            - { name: mamba_ai.system_prompt_part, priority: 300 }
+
+    MambaAi\Version_2\Prompt\Part\SoulSystemPart:
+        tags:
+            - { name: mamba_ai.system_prompt_part, priority: 200 }
+
+    MambaAi\Version_2\Prompt\Part\KnowledgeSystemPart:
+        tags:
+            - { name: mamba_ai.system_prompt_part, priority: 100 }
+
+    # --- Default user prompt parts ---
+    MambaAi\Version_2\Prompt\Part\MessageContentPart:
+        tags:
+            - { name: mamba_ai.user_prompt_part, priority: 200 }
+
+    MambaAi\Version_2\Prompt\Part\CurrentDatePart:
+        tags:
+            - { name: mamba_ai.user_prompt_part, priority: 100 }
+
+    MambaAi\Version_2\Channel\CliChannel:
+        tags:
+            - { name: mamba_ai.channel }
+
+    MambaAi\Version_2\Channel\ChannelResolver:
+        arguments:
+            - !tagged_iterator mamba_ai.channel
+
+    MambaAi\Version_2\Command\ChatCommand:
+        arguments:
+            - '@MambaAi\Version_2\AgentKernel'
+        tags:
+            - { name: console.command }
