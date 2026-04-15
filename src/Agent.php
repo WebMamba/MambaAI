@@ -19,6 +19,7 @@ class Agent
         public string $folder,
         public string $description,
         public array $tools = [],
+        /** @var Skill[] */
         public array $skills = [],
         public bool $stream = true,
         public string $systemPrompt = '',

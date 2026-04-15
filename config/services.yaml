@@ -22,6 +22,10 @@ services:
             $userParts: !tagged_iterator mamba_ai.user_prompt_part
 
     # --- Default system prompt parts ---
+    MambaAi\Version_2\Prompt\Part\SkillsSystemPart:
+        tags:
+            - { name: mamba_ai.system_prompt_part, priority: 50 }
+
     MambaAi\Version_2\Prompt\Part\AgentSystemPart:
         tags:
             - { name: mamba_ai.system_prompt_part, priority: 300 }

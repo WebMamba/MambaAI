@@ -38,7 +38,25 @@ class FolderAgentBuilder implements AgentBuilderInterface
             knowledgeDir: $knowledgeDir,
             excludedParts: $config['exclude_parts'] ?? [],
             tools: $this->loadTools($path),
+            skills: $this->loadSkills($path),
         );
+    }
+
+    private function loadSkills(string $agentPath): array
+    {
+        if (!is_dir($agentPath.'/skills')) {
+            return [];
+        }
+
+        $skills = [];
+        foreach ((new Finder())->files()->in($agentPath.'/skills')->name('*.md')->depth(0)->sortByName() as $file) {
+            $skills[] = new Skill(
+                name: $file->getFilenameWithoutExtension(),
+                content: trim($file->getContents()),
+            );
+        }
+
+        return $skills;
     }
 
     private function loadTools(string $agentPath): array
