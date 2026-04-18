@@ -9,6 +9,9 @@ use MambaAi\Version_2\AgentResolver;
 use MambaAi\Version_2\AgentResolverInterface;
 use MambaAi\Version_2\Channel\ChannelResolver;
 use MambaAi\Version_2\Channel\ChannelResolverInterface;
+use MambaAi\Version_2\Channel\SlackChannel;
+use MambaAi\Version_2\Event\ControllerEvent;
+use MambaAi\Version_2\EventListener\SlackChallengeListener;
 use MambaAi\Version_2\FolderAgentBuilder;
 use MambaAi\Version_2\Prompt\SystemPromptPartInterface;
 use MambaAi\Version_2\Prompt\UserPromptPartInterface;
@@ -50,5 +53,23 @@ class MambaAiExtension extends Extension
             ->addTag('mamba_ai.system_prompt_part');
         $container->registerForAutoconfiguration(UserPromptPartInterface::class)
             ->addTag('mamba_ai.user_prompt_part');
+
+        $slack = $config['slack'] ?? [];
+        if (!empty($slack['bot_token'])) {
+            $slackDef = new Definition(SlackChannel::class, [
+                '$botToken' => $slack['bot_token'],
+                '$httpClient' => new Reference('http_client'),
+            ]);
+            $slackDef->addTag('mamba_ai.channel');
+            $container->setDefinition(SlackChannel::class, $slackDef);
+
+            $listenerDef = new Definition(SlackChallengeListener::class, [
+                '$signingSecret' => $slack['signing_secret'],
+            ]);
+            $listenerDef->addTag('kernel.event_listener', [
+                'event' => ControllerEvent::class,
+            ]);
+            $container->setDefinition(SlackChallengeListener::class, $listenerDef);
+        }
     }
 }

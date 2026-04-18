@@ -22,6 +22,12 @@ class Configuration implements ConfigurationInterface
                 ->scalarNode('default_model')
                     ->defaultValue('claude-3-haiku-20240307')
                 ->end()
+                ->arrayNode('slack')
+                    ->children()
+                        ->scalarNode('bot_token')->defaultValue('')->end()
+                        ->scalarNode('signing_secret')->defaultValue('')->end()
+                    ->end()
+                ->end()
             ->end()
         ;
 
