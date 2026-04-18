@@ -7,6 +7,7 @@ use Symfony\AI\Agent\Toolbox\AgentProcessor;
 use Symfony\AI\Agent\Toolbox\Toolbox;
 use Symfony\AI\Platform\PlatformInterface;
 use Symfony\AI\Platform\Result\Stream\Delta\TextDelta;
+use Symfony\AI\Platform\Result\Stream\Delta\ToolCallStart;
 use Symfony\AI\Platform\Result\StreamResult;
 
 class Agent
@@ -27,6 +28,7 @@ class Agent
         public ?string $knowledgeDir = null,
         /** @var string[] short class names of parts to exclude for this agent */
         public array $excludedParts = [],
+        public bool $memory = true,
     ) {}
 
     public function call(Prompt $prompt): iterable
@@ -51,6 +53,8 @@ class Agent
             foreach ($result->getContent() as $delta) {
                 if ($delta instanceof TextDelta) {
                     yield new Message(agent: $this->name, content: $delta->getText());
+                } elseif ($delta instanceof ToolCallStart) {
+                    yield new Message(agent: $this->name, content: '_calling '.$delta->getName().'..._'."\n");
                 }
             }
         } else {

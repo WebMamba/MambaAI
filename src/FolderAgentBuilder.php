@@ -2,6 +2,7 @@
 
 namespace MambaAi\Version_2;
 
+use MambaAi\Version_2\Tool\MemoryWriteTool;
 use Symfony\AI\Agent\Toolbox\Attribute\AsTool;
 use Symfony\AI\Platform\PlatformInterface;
 use Symfony\Component\Finder\Finder;
@@ -25,6 +26,12 @@ class FolderAgentBuilder implements AgentBuilderInterface
             break;
         }
 
+        $memory = $config['memory'] ?? true;
+        $tools = $this->loadTools($path);
+        if ($memory) {
+            $tools[] = new MemoryWriteTool($path);
+        }
+
         return new Agent(
             name: $name,
             platform: $this->platform,
@@ -37,8 +44,9 @@ class FolderAgentBuilder implements AgentBuilderInterface
             soulPrompt: $this->readFile($path, 'SOUL.md'),
             knowledgeDir: $knowledgeDir,
             excludedParts: $config['exclude_parts'] ?? [],
-            tools: $this->loadTools($path),
+            tools: $tools,
             skills: $this->loadSkills($path),
+            memory: $memory,
         );
     }
 
