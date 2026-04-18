@@ -66,10 +66,15 @@ Les agents sont configurés dans des **dossiers** (un dossier par agent) :
 ```
 agents/
   default/
-    config.yaml    — modèle, stream, nom
+    config.yaml    — modèle, stream, provider, memory, exclude_parts
     AGENT.md       — system prompt
     SOUL.md        — personnalité / ton (optionnel)
     knowledge/     — fichiers de connaissance (optionnel)
+    skills/        — fichiers .md de skills (optionnel)
+    tools/         — fichiers .php de tools (optionnel, #[AsTool])
+    memory/
+      MEMORY.md    — mémoire persistante (écrite par le LLM via memory_write)
+      history.jsonl — historique des échanges (géré par le framework)
 ```
 
 `AgentLoader` scanne `agents/` avec `Symfony\Component\Finder\Finder`, détecte les sous-dossiers de profondeur 0, et délègue la construction à `AgentBuilderInterface::build(name, path)`.
@@ -78,20 +83,32 @@ agents/
 
 ### Prompt construction — `PromptBuilder`
 
-Le `PromptBuilder` assemble :
+Le `PromptBuilder` délègue à des **parts taguées** (`mamba_ai.system_prompt_part` / `mamba_ai.user_prompt_part`). Chaque part implémente `SystemPromptPartInterface` ou `UserPromptPartInterface` et déclare :
+- `getTargetAgent(): ?string` — `null` = s'applique à tous les agents, sinon nom de l'agent ciblé
+- `getContent()` / `getBlocks()` — retourne le contenu, ou `null` pour être ignorée
 
-1. **System prompt** (dans cet ordre, concaténés) :
-   - `AGENT.md` (system prompt de l'agent)
-   - `SOUL.md` (personnalité, optionnel)
-   - Structure du dossier `knowledge/` listée avec `Finder` (si présent)
+Le builder filtre à l'exécution : il exclut les parts dont le nom court figure dans `$agent->excludedParts`.
 
-2. **User message** : un seul `UserMessage` avec plusieurs blocs `Text` :
-   - Le contenu du message utilisateur
-   - La date/heure courante
+**System prompt** (par ordre de priorité décroissante) :
 
-3. **Options** : `['stream' => $agent->stream]`, extensibles via `BuildOptionPrompt` event.
+| Priorité | Part | Contenu |
+|---|---|---|
+| 300 | `AgentSystemPart` | `AGENT.md` |
+| 200 | `SoulSystemPart` | `SOUL.md` |
+| 100 | `KnowledgeSystemPart` | Listing du dossier `knowledge/` |
+| 75 | `MemorySystemPart` | Contenu de `memory/MEMORY.md` |
+| 60 | `ConversationHistoryPart` | Derniers échanges depuis `memory/history.jsonl` |
+| 50 | `SkillsSystemPart` | Liste des skills disponibles |
+| 25 | `MemoryInstructionSystemPart` | Instructions au LLM pour mémoriser |
 
-Chaque étape émet un événement (`BuildSystemPrompt`, `BuildUserPrompt`, `BuildOptionPrompt`) permettant d'injecter du contexte supplémentaire sans modifier le builder.
+**User message** (par ordre de priorité décroissante) :
+
+| Priorité | Part | Contenu |
+|---|---|---|
+| 200 | `MessageContentPart` | Contenu du message utilisateur |
+| 100 | `CurrentDatePart` | Date/heure courante |
+
+**Options** : `['stream' => $agent->stream]`, extensibles via `BuildOptionPrompt` event.
 
 ### Events du cycle de vie
 
@@ -105,7 +122,7 @@ Chaque étape émet un événement (`BuildSystemPrompt`, `BuildUserPrompt`, `Bui
 | `BuildSystemPrompt` | `Agent`, `Message`, `MessageBag` | Ajout de blocs dans le system prompt |
 | `BuildUserPrompt` | `Agent`, `Message`, `MessageBag` | Ajout de blocs dans le message utilisateur |
 | `BuildOptionPrompt` | `Agent`, `Message`, `array $options` | Configuration LLM (temperature, max_tokens, etc.) |
-| `TerminateEvent` | `array $answers` | Persistance mémoire, analytics |
+| `TerminateEvent` | `array $answers`, `Agent`, `Message` | Persistance mémoire, analytics |
 
 ### Symfony Bundle — `MambaAiBundle`
 
@@ -122,6 +139,28 @@ mamba_ai:
 - Charge `config/services.yaml` (services de base)
 - Définit `FolderAgentBuilder` programmatiquement avec `new Reference($config['default_platform'])` (résolution dynamique de la plateforme)
 - Enregistre les 5 aliases d'interface (`AgentBuilderInterface` → `FolderAgentBuilder`, etc.)
+
+### Mémoire — `memory/`
+
+Activée par défaut (`memory: true` dans `config.yaml`). Quand activée :
+
+- **`MemoryWriteTool`** : outil injecté automatiquement dans les tools de l'agent. Le LLM peut écrire la mémoire complète mise à jour dans `memory/MEMORY.md`.
+- **`ConversationHistoryListener`** : listener sur `TerminateEvent`, append chaque échange dans `memory/history.jsonl` (format JSONL : `{role, content, at}`). Garde les 100 dernières entrées (50 échanges).
+- Le dossier `memory/` est créé automatiquement au premier échange.
+
+Pour désactiver :
+```yaml
+# agents/default/config.yaml
+memory: false
+```
+
+### Skills — `skills/`
+
+Fichiers `.md` dans `agents/{name}/skills/`, un fichier par skill. Le nom du fichier (sans extension) est le nom du skill. Injectés dans le system prompt via `SkillsSystemPart`.
+
+### Tools — `tools/`
+
+Fichiers `.php` dans `agents/{name}/tools/`, découverts via `get_declared_classes()` diff + `require_once`. Seules les classes avec `#[AsTool]` sont enregistrées. Instanciées directement (`new $className()`).
 
 ---
 
@@ -177,31 +216,10 @@ En mode `stream: true`, les erreurs HTTP de l'API Anthropic (400, 404…) produi
 
 ## Ce qui reste à implémenter
 
-Analyse basée sur le fonctionnement de Claude Code — ce que le framework n'implémente pas encore :
-
-### Contexte environnement dans le prompt utilisateur
-- Date/heure courante : **fait** (`PromptBuilder`)
-- Répertoire de travail courant (`cwd`)
-- Statut git (`git status`, fichiers modifiés)
-- Structure du projet (arborescence, README.md)
-- Contenu des fichiers de configuration (CLAUDE.md, etc.)
-
-### Historique multi-tour
-Le `PromptBuilder` actuel envoie uniquement le message courant. Il n'y a pas de gestion de l'historique de conversation (messages précédents user/assistant). À implémenter via un listener sur `BuildUserPrompt` ou `MessageEvent`.
-
-### Tools (appels de fonction)
-`Agent::call()` ne supporte pas encore les tool calls. Il faudrait :
-- Définir des tools sur un agent (via `config.yaml` ou attributs PHP)
-- Gérer la boucle tool-call / tool-result dans `AgentKernel` ou dans `Agent::call()`
-- Normaliser les messages `tool_use` / `tool_result` pour éviter les orphelins
-
-### Skills
-Mécanisme pour associer des "skills" composables à un agent, listés dans le prompt système (`<system-reminder>You have the following skills: ...</system-reminder>`).
-
-### Mémoire
-- Court terme : historique de la conversation
-- Long terme : persistance entre sessions
-- Points d'intégration : `MessageEvent` (injection au départ) + `TerminateEvent` (persistance à la fin)
+### Channels supplémentaires
+Seul `CliChannel` est implémenté.
+- **Slack** : `SlackChannel` + `SlackController` (endpoint `/slack/events`). Routing agent = nom du canal Slack. Contrainte : répondre en < 3s (utiliser `fastcgi_finish_request()`). Voir plan en cours.
+- HTTP/webhook, Discord : à venir.
 
 ### Configuration LLM fine
 `config.yaml` d'un agent ne supporte pas encore :
@@ -213,5 +231,14 @@ Mécanisme pour associer des "skills" composables à un agent, listés dans le p
 ### Prompt caching
 Ajouter `cache_control: { type: 'ephemeral' }` sur les blocs système stables (system prompt, knowledge) pour réduire les coûts. Disponible via le header beta Anthropic `prompt-caching-2024-07-31`.
 
-### Channels supplémentaires
-Seul `CliChannel` est implémenté. À venir : HTTP (webhook), Slack, Discord, etc.
+### Contexte environnement avancé
+- Répertoire de travail courant (`cwd`)
+- Statut git (`git status`, fichiers modifiés)
+- Structure du projet / README.md
+Utile pour les agents de développement. À implémenter comme des `UserPromptPartInterface` ciblées (`getTargetAgent()` retourne le nom de l'agent concerné).
+
+### Slack
+Pour slack on va commencer simplement, avec un bot plusieurs canaux.
+Si slack exige une réponse de 3s ce qu'on peut faire c'est qu'on a un controller qui renvoie tout de suite
+la réponse à slack, puis dans un message messenger transmet la request qui sera handle par le KernelAgent
+en asynchrone. Quand le kernel a fini de traiter la request on envoie la reponse dans Slack.

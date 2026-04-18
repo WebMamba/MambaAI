@@ -64,6 +64,6 @@ class AgentKernel
 
         $channel->finalize();
 
-        $this->eventDispatcher->dispatch(new TerminateEvent($answers));
+        $this->eventDispatcher->dispatch(new TerminateEvent($answers, $agent, $message));
     }
 }
