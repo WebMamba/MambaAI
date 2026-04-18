@@ -14,6 +14,7 @@
     "require": {
         "symfony/ai-agent": "^0.7.0",
         "symfony/ai-anthropic-platform": "^0.7.0",
-        "symfony/finder": "^8.0"
+        "symfony/finder": "^8.0",
+        "symfony/messenger": "^8.0"
     }
 }

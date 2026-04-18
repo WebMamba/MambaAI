@@ -22,10 +22,6 @@ services:
             $userParts: !tagged_iterator mamba_ai.user_prompt_part
 
     # --- Default system prompt parts ---
-    MambaAi\Version_2\Prompt\Part\SkillsSystemPart:
-        tags:
-            - { name: mamba_ai.system_prompt_part, priority: 50 }
-
     MambaAi\Version_2\Prompt\Part\AgentSystemPart:
         tags:
             - { name: mamba_ai.system_prompt_part, priority: 300 }
@@ -38,6 +34,22 @@ services:
         tags:
             - { name: mamba_ai.system_prompt_part, priority: 100 }
 
+    MambaAi\Version_2\Prompt\Part\MemorySystemPart:
+        tags:
+            - { name: mamba_ai.system_prompt_part, priority: 75 }
+
+    MambaAi\Version_2\Prompt\Part\ConversationHistoryPart:
+        tags:
+            - { name: mamba_ai.system_prompt_part, priority: 60 }
+
+    MambaAi\Version_2\Prompt\Part\SkillsSystemPart:
+        tags:
+            - { name: mamba_ai.system_prompt_part, priority: 50 }
+
+    MambaAi\Version_2\Prompt\Part\MemoryInstructionSystemPart:
+        tags:
+            - { name: mamba_ai.system_prompt_part, priority: 25 }
+
     # --- Default user prompt parts ---
     MambaAi\Version_2\Prompt\Part\MessageContentPart:
         tags:
@@ -45,7 +57,24 @@ services:
 
     MambaAi\Version_2\Prompt\Part\CurrentDatePart:
         tags:
-            - { name: mamba_ai.user_prompt_part, priority: 100 }
+            - { name: mamba_ai.system_prompt_part, priority: 20 }
+
+    MambaAi\Version_2\Message\MambaAIMessageHandler:
+        arguments:
+            $agentKernel: '@MambaAi\Version_2\AgentKernel'
+        tags:
+            - { name: messenger.message_handler }
+
+    MambaAi\Version_2\Controller\MambaAIController:
+        arguments:
+            $eventDispatcher: '@event_dispatcher'
+            $messageBus: '@Symfony\Component\Messenger\MessageBusInterface'
+        tags:
+            - { name: controller.service_arguments }
+
+    MambaAi\Version_2\EventListener\ConversationHistoryListener:
+        tags:
+            - { name: kernel.event_listener, event: MambaAi\Version_2\Event\TerminateEvent }
 
     MambaAi\Version_2\Channel\CliChannel:
         tags:
