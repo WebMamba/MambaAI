@@ -9,8 +9,9 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Style\SymfonyStyle;
 
-#[AsCommand(name: 'mamba:chat', description: 'Send a message to an agent')]
+#[AsCommand(name: 'mamba:chat', description: 'Start an interactive chat session with an agent')]
 class ChatCommand extends Command
 {
     public function __construct(private AgentKernel $kernel)
@@ -21,14 +22,35 @@ class ChatCommand extends Command
     protected function configure(): void
     {
         $this
-            ->addArgument('message', InputArgument::REQUIRED, 'Message to send to the agent')
+            ->addArgument('message', InputArgument::OPTIONAL, 'Send a single message and exit')
             ->addOption('agent', 'a', InputOption::VALUE_OPTIONAL, 'Agent name', 'default');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $this->kernel->handleCli($input);
+        $io = new SymfonyStyle($input, $output);
+        $agent = $input->getOption('agent');
 
-        return Command::SUCCESS;
+        // Single-shot mode: message passed as argument
+        if ($message = $input->getArgument('message')) {
+            $this->kernel->handleCliMessage($agent, $message, $output);
+            return Command::SUCCESS;
+        }
+
+        // Interactive loop mode
+        $io->writeln(sprintf('<info>%s</info> — Appuie sur <comment>Ctrl+C</comment> pour quitter.', $agent));
+        $io->writeln('');
+
+        while (true) {
+            $message = $io->ask('<fg=cyan>Vous</>');
+
+            if ($message === null || trim($message) === '') {
+                continue;
+            }
+
+            $output->write('<fg=green>' . $agent . '</> : ');
+            $this->kernel->handleCliMessage($agent, $message, $output);
+            $output->writeln('');
+        }
     }
 }
