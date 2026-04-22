@@ -13,6 +13,7 @@ use MambaAi\Version_2\Channel\SlackChannel;
 use MambaAi\Version_2\Event\ControllerEvent;
 use MambaAi\Version_2\EventListener\SlackChallengeListener;
 use MambaAi\Version_2\FolderAgentBuilder;
+use MambaAi\Version_2\StreamMapperInterface;
 use MambaAi\Version_2\Prompt\SystemPromptPartInterface;
 use MambaAi\Version_2\Prompt\UserPromptPartInterface;
 use MambaAi\Version_2\PromptBuilder;
@@ -59,12 +60,14 @@ class MambaAiExtension extends Extension
             $slackDef = new Definition(SlackChannel::class, [
                 '$botToken' => $slack['bot_token'],
                 '$httpClient' => new Reference('http_client'),
+                '$logger' => new Reference('logger'),
             ]);
             $slackDef->addTag('mamba_ai.channel');
             $container->setDefinition(SlackChannel::class, $slackDef);
 
             $listenerDef = new Definition(SlackChallengeListener::class, [
                 '$signingSecret' => $slack['signing_secret'],
+                '$logger' => new Reference('logger'),
             ]);
             $listenerDef->addTag('kernel.event_listener', [
                 'event' => ControllerEvent::class,

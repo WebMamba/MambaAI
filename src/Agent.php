@@ -6,9 +6,7 @@ use Symfony\AI\Agent\Agent as BaseAgent;
 use Symfony\AI\Agent\Toolbox\AgentProcessor;
 use Symfony\AI\Agent\Toolbox\Toolbox;
 use Symfony\AI\Platform\PlatformInterface;
-use Symfony\AI\Platform\Result\Stream\Delta\TextDelta;
-use Symfony\AI\Platform\Result\Stream\Delta\ToolCallStart;
-use Symfony\AI\Platform\Result\StreamResult;
+use Symfony\AI\Platform\Result\ResultInterface;
 
 class Agent
 {
@@ -31,7 +29,7 @@ class Agent
         public bool $memory = true,
     ) {}
 
-    public function call(Prompt $prompt): iterable
+    public function call(Prompt $prompt): ResultInterface
     {
         $processors = [];
         if ($this->tools !== []) {
@@ -47,18 +45,7 @@ class Agent
         );
 
         $options = array_merge(['stream' => $this->stream], $prompt->options);
-        $result = $agent->call($prompt->getMessages(), $options);
 
-        if ($result instanceof StreamResult) {
-            foreach ($result->getContent() as $delta) {
-                if ($delta instanceof TextDelta) {
-                    yield new Message(agent: $this->name, content: $delta->getText());
-                } elseif ($delta instanceof ToolCallStart) {
-                    yield new Message(agent: $this->name, content: '_calling '.$delta->getName().'..._'."\n");
-                }
-            }
-        } else {
-            yield new Message(agent: $this->name, content: (string) $result->getContent());
-        }
+        return $agent->call($prompt->getMessages(), $options);
     }
 }

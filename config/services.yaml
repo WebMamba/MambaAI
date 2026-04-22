@@ -1,10 +1,15 @@
 services:
+    MambaAi\Version_2\DefaultStreamMapper: ~
+
+    MambaAi\Version_2\StreamMapperInterface: '@MambaAi\Version_2\DefaultStreamMapper'
+
     MambaAi\Version_2\AgentKernel:
         arguments:
             - '@event_dispatcher'
             - '@MambaAi\Version_2\Channel\ChannelResolverInterface'
             - '@MambaAi\Version_2\AgentResolverInterface'
             - '@MambaAi\Version_2\PromptBuilderInterface'
+            - '@MambaAi\Version_2\StreamMapperInterface'
 
     MambaAi\Version_2\AgentLoader:
         arguments:
@@ -87,5 +92,24 @@ services:
     MambaAi\Version_2\Command\ChatCommand:
         arguments:
             - '@MambaAi\Version_2\AgentKernel'
+        tags:
+            - { name: console.command }
+
+    MambaAi\Version_2\Command\WelcomeCommand:
+        arguments:
+            $agentsDir: '%mamba_ai.agents_dir%'
+            $projectDir: '%kernel.project_dir%'
+        tags:
+            - { name: console.command }
+
+    MambaAi\Version_2\Command\SetupCommand:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+        tags:
+            - { name: console.command }
+
+    MambaAi\Version_2\Command\AgentCreateCommand:
+        arguments:
+            $agentsDir: '%mamba_ai.agents_dir%'
         tags:
             - { name: console.command }
