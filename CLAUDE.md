@@ -1,5 +1,20 @@
 # Mamba AI — Framework
 
+## Vision & Narrative
+
+**mambaAI, c'est ta bande de copains IA.**
+
+L'idée : plutôt que d'avoir un assistant généraliste qui fait tout en même temps, tu construis une **équipe** — chaque membre a son caractère, son domaine, ses capacités. Un dev qui connaît ton code sur le bout des doigts. Un assistant qui gère ton agenda. Un expert métier qui connaît tes process. Ils sont là, toujours disponibles, sur Slack, WhatsApp, en ligne de commande, où tu veux.
+
+Ce qui guide chaque décision du framework :
+- **Simple d'abord** — un débutant doit pouvoir créer son premier agent en moins de 5 minutes, sans lire 50 pages de doc
+- **Imagé et concret** — on parle d'agents, de personnalités, de mémoire, de skills — pas de "processors", "transformers" ou "orchestrators"
+- **Extensible ensuite** — un développeur expérimenté doit pouvoir aller aussi loin qu'il veut : tools custom, channels sur mesure, stratégies mémoire avancées
+
+Cette narrative doit irriguer tout : les noms de commandes, les messages d'erreur, l'onboarding, la doc.
+
+---
+
 ## But du projet
 
 Mamba AI est un framework PHP pour constituer et déployer une **équipe d'agents IA**, chacun avec sa propre identité et ses propres capacités.
@@ -210,7 +225,62 @@ Les alias "latest" (`claude-3-5-sonnet-latest`) peuvent ne pas être reconnus se
 
 ### Le mode streaming masque silencieusement les erreurs API
 
-En mode `stream: true`, les erreurs HTTP de l'API Anthropic (400, 404…) produisent un flux SSE vide : le générateur ne yield rien, aucune exception n'est levée, la commande se termine sans output. Pour débugger, forcer `stream: false` et observer l'exception.
+En mode `stream: true`, les erreurs HTTP de l'API Anthropic (400, 404…) produisent un flux SSE vide : le générateur ne yield rien, aucune exception n'est levée. Le `CliChannel` détecte ce cas dans `finalize()` (via `$hasSentContent`) et affiche un message d'aide. Pour voir l'erreur brute, forcer `stream: false` dans `config.yaml`.
+
+---
+
+## Commandes CLI
+
+| Commande | Description |
+|---|---|
+| `mamba:welcome` | Point d'entrée pour un nouvel utilisateur — lance `mamba:setup` si besoin, puis crée l'agent Mambi dans `agents/mambi/` |
+| `mamba:setup` | Configure le provider, la clé API et le modèle par défaut. Écrit `.env.local` et `config/packages/mamba_ai.yaml` |
+| `mamba:agent:create <name>` | Scaffold un nouvel agent : crée `agents/<name>/` avec AGENT.md, SOUL.md, config.yaml, et les sous-dossiers |
+| `mamba:chat` | Session de chat interactive (boucle jusqu'à Ctrl+C). Option `--agent=<name>` pour cibler un agent (défaut : `default`). Accepte aussi un message en argument pour un usage one-shot |
+
+### mamba:chat — mode interactif vs one-shot
+
+```bash
+# Mode interactif (boucle)
+php bin/console mamba:chat --agent=mambi
+
+# Mode one-shot (single message, quitte après)
+php bin/console mamba:chat --agent=mambi "Bonjour !"
+```
+
+### Gestion des erreurs silencieuses du streaming
+
+En mode `stream: true`, les erreurs API ne lèvent pas d'exception — elles produisent un flux vide. Le `CliChannel` détecte cette situation dans `finalize()` et affiche un message d'aide. Pour voir l'erreur brute, passer `stream: false` dans le `config.yaml` de l'agent.
+
+---
+
+## Mambi — l'agent de démarrage
+
+Mambi est l'agent livré avec le framework via `mamba:welcome`. Il est copié dans `agents/mambi/` du projet et peut être modifié librement.
+
+**Fichiers** : `src/Resources/agent-templates/mambi/`
+
+**Ce qu'il a de spécial** :
+- Son `AGENT.md` contient la doc du framework et des exemples concrets
+- Son `SOUL.md` lui donne un ton accueillant et pédagogue
+- Il a accès à un `BashTool` (`tools/BashTool.php`) qui lui permet d'exécuter des commandes shell — et donc de créer des fichiers et dossiers d'agents directement
+
+**Attention** : le `BashTool` donne un accès shell complet. Ne pas l'inclure dans des agents exposés à des utilisateurs externes.
+
+### BashTool
+
+Outil PHP avec `#[AsTool]` qui exécute une commande shell via `proc_open` et retourne stdout + stderr. Timeout configurable (défaut 30s). Utilisé par Mambi pour créer la structure des agents à la demande.
+
+---
+
+## Templates d'agents
+
+Les templates sont dans `src/Resources/agent-templates/` :
+
+| Dossier | Usage |
+|---|---|
+| `mambi/` | Template de l'agent guide, copié par `mamba:welcome` |
+| `default/` | Template de base pour `mamba:agent:create`, avec placeholders `{{name}}` |
 
 ---
 
