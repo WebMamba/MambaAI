@@ -31,8 +31,7 @@ use Symfony\Component\Tui\Widget\MarkdownWidget;
 
 use function Amp\async;
 
-#[AsCommand(name:
-    'mamba:chat', description: 'Start an interactive chat session with an agent')]
+#[AsCommand(name: 'mamba:chat', description: 'Start an interactive chat session with an agent')]
 class ChatCommand extends Command
 {
     private const VERBS = [
