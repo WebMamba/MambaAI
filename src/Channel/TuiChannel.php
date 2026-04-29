@@ -6,16 +6,20 @@ namespace MambaAi\Channel;
 
 use MambaAi\ChannelInterface;
 use MambaAi\Message;
-use MambaAi\Renderer\CliRenderer;
 use MambaAi\Renderer\MessageRendererInterface;
+use MambaAi\Renderer\TuiRenderer;
 use Symfony\Component\HttpFoundation\Request;
 
-class CliChannel implements ChannelInterface
+class TuiChannel implements ChannelInterface
 {
+    public function __construct(private TuiRenderer $renderer)
+    {
+    }
+
     #[\Override]
     public function supports(Request $request): bool
     {
-        return 'cli' === $request->attributes->get('_channel');
+        return 'tui' === $request->attributes->get('_channel');
     }
 
     #[\Override]
@@ -30,6 +34,6 @@ class CliChannel implements ChannelInterface
     #[\Override]
     public function getRenderer(): MessageRendererInterface
     {
-        return new CliRenderer();
+        return $this->renderer;
     }
 }

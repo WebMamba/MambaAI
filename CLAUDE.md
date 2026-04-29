@@ -196,7 +196,7 @@ Fichiers `.php` dans `agents/{name}/tools/`, découverts via `get_declared_class
 Chaque composant principal dispose d'une interface (`AgentBuilderInterface`, `AgentLoaderInterface`, `AgentResolverInterface`, `PromptBuilderInterface`, `ChannelResolverInterface`). L'utilisateur du framework peut surcharger n'importe quel composant dans son `services.yaml` :
 
 ```yaml
-MambaAi\Version_2\AgentBuilderInterface: '@App\MonBuilderCustom'
+MambaAi\AgentBuilderInterface: '@App\MonBuilderCustom'
 ```
 
 ### Le builder reçoit ses defaults via DI, pas via les méthodes
@@ -281,6 +281,50 @@ Les templates sont dans `src/Resources/agent-templates/` :
 |---|---|
 | `mambi/` | Template de l'agent guide, copié par `mamba:welcome` |
 | `default/` | Template de base pour `mamba:agent:create`, avec placeholders `{{name}}` |
+
+---
+
+## Symfony TUI
+
+`symfony/tui` (`8.1.x-dev`) est déjà dans `composer.json`. C'est un composant Symfony pour construire des interfaces CLI riches et interactives.
+
+### Widgets disponibles
+- **TextWidget** — texte statique, supporte les polices FIGlet (`font: 'big'`, `'small'`, `'slant'`…)
+- **InputWidget** — champ texte monoligne avec curseur, prompt configurable (`setPrompt()`)
+- **EditorWidget** — éditeur multiligne avec undo/redo, autocomplete
+- **SelectListWidget** — liste de sélection scrollable avec filtre
+- **LoaderWidget** / **CancellableLoaderWidget** — spinners animés (8 styles)
+- **ProgressBarWidget** — barre de progression déterminée/indéterminée
+- **MarkdownWidget** — rendu Markdown avec syntax highlighting
+- **ContainerWidget** — layout vertical/horizontal avec gap, padding, border
+
+### Styling
+- Système CSS-like : `StyleSheet`, classes utilitaires Tailwind (`TailwindStylesheet`), inline `Style`
+- Couleurs : ANSI nommées, 256 palette, hex/RGB true color (`Color::hex('#fff')`)
+- Borders : `Border::all(1, 'rounded')`, patterns : normal, rounded, double, tall, wide
+- Propriétés : `bold`, `dim`, `italic`, `underline`, `padding`, `gap`, `flex`, `align`, `verticalAlign`
+
+### API principale
+```php
+$tui = new Tui();
+$tui->add($widget);
+$tui->setFocus($widget);
+$tui->quitOn('ctrl+c');
+$tui->run();     // bloque jusqu'à stop()
+$tui->stop();    // libère le terminal
+$tui->onTick(fn() => ...);  // hook sur chaque frame (pour travail async)
+```
+`$tui->run()` peut être appelé plusieurs fois sur la même instance.
+
+### Contrainte avec le streaming agent
+`CliChannel::send()` fait `echo` directement. Le TUI contrôle le terminal — on ne peut pas `echo` pendant que TUI tourne. Pattern à utiliser : **toggle** — `$tui->stop()` avant le streaming, `$tui->run()` après. Le streaming s'affiche normalement entre les deux sessions TUI.
+
+### Ce qui est prévu
+Refonte des 4 commandes CLI :
+- **`mamba:chat`** — header TUI + `InputWidget` pour le prompt, streaming entre les sessions TUI
+- **`mamba:setup`** — wizard en 3 étapes avec `SelectListWidget` (provider, modèle) + `InputWidget` (clé API)
+- **`mamba:welcome`** — bannière ASCII art avec `TextWidget` (font FIGlet `big`)
+- **`mamba:agent:create`** — rendre l'argument `name` optionnel, `InputWidget` si absent
 
 ---
 

@@ -1,14 +1,20 @@
 <?php
 
-namespace MambaAi\Version_2\Renderer;
+declare(strict_types=1);
 
-use MambaAi\Version_2\Message;
+namespace MambaAi\Renderer;
+
+use MambaAi\Message;
 
 interface MessageRendererInterface
 {
     /**
-     * Transform a Message into a string to output via the channel.
-     * Return null to skip sending this message entirely.
+     * Transform a Message into the format expected by the channel.
+     * Return null to skip this message (it won't be yielded by the kernel).
+     *
+     * Implementations may return strings (text-based channels: CLI, Slack),
+     * Message objects (passthrough for in-process channels: TUI), or any
+     * other type appropriate for the channel.
      */
-    public function render(Message $message): ?string;
+    public function render(Message $message): mixed;
 }

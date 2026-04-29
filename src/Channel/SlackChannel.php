@@ -1,11 +1,13 @@
 <?php
 
-namespace MambaAi\Version_2\Channel;
+declare(strict_types=1);
 
-use MambaAi\Version_2\ChannelInterface;
-use MambaAi\Version_2\Message;
-use MambaAi\Version_2\Renderer\MessageRendererInterface;
-use MambaAi\Version_2\Renderer\NullRenderer;
+namespace MambaAi\Channel;
+
+use MambaAi\ChannelInterface;
+use MambaAi\Message;
+use MambaAi\Renderer\MessageRendererInterface;
+use MambaAi\Renderer\NullRenderer;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Symfony\Component\HttpFoundation\Request;
@@ -15,29 +17,32 @@ class SlackChannel implements ChannelInterface
 {
     private string $channelId = '';
     private ?string $threadTs = null;
-    private string $buffer = '';
 
     public function __construct(
         private string $botToken,
         private HttpClientInterface $httpClient,
         private LoggerInterface $logger = new NullLogger(),
-    ) {}
+    ) {
+    }
 
+    #[\Override]
     public function getRenderer(): MessageRendererInterface
     {
         return new NullRenderer();
     }
 
+    #[\Override]
     public function supports(Request $request): bool
     {
         $payload = json_decode($request->getContent(), true);
 
-        return is_array($payload) && (
-            isset($payload['api_app_id']) ||
-            ($payload['type'] ?? '') === 'url_verification'
+        return \is_array($payload) && (
+            isset($payload['api_app_id'])
+            || ($payload['type'] ?? '') === 'url_verification'
         );
     }
 
+    #[\Override]
     public function receive(Request $request): Message
     {
         $payload = json_decode($request->getContent(), true);
@@ -45,7 +50,6 @@ class SlackChannel implements ChannelInterface
         $event = $payload['event'] ?? [];
         $this->channelId = $event['channel'] ?? '';
         $this->threadTs = $event['thread_ts'] ?? $event['ts'] ?? null;
-        $this->buffer = '';
 
         $agentName = $this->resolveAgentName($this->channelId);
         $text = $this->cleanText($event['text'] ?? '');
@@ -59,22 +63,29 @@ class SlackChannel implements ChannelInterface
         return new Message(agent: $agentName, content: $text);
     }
 
-    public function send(string $output): void
+    /**
+     * Aggregate the kernel's pre-rendered string chunks into a single Slack post.
+     *
+     * @param iterable<string> $rendered
+     */
+    public function post(iterable $rendered): void
     {
-        $this->buffer .= $output;
-    }
+        $buffer = '';
+        foreach ($rendered as $chunk) {
+            if (\is_string($chunk)) {
+                $buffer .= $chunk;
+            }
+        }
 
-    public function finalize(): void
-    {
-        if ($this->buffer === '') {
-            $this->logger->warning('[SlackChannel] finalize() called but buffer is empty — no response to send', [
-                'channel_id' => $this->channelId,
-            ]);
+        if ('' === $buffer) {
+            $this->logger->warning('[SlackChannel] No text to post', ['channel_id' => $this->channelId]);
+
             return;
         }
 
-        if ($this->channelId === '') {
-            $this->logger->error('[SlackChannel] finalize() called but channelId is empty — cannot send');
+        if ('' === $this->channelId) {
+            $this->logger->error('[SlackChannel] post() called but channelId is empty');
+
             return;
         }
 
@@ -86,7 +97,7 @@ class SlackChannel implements ChannelInterface
                 ],
                 'json' => array_filter([
                     'channel' => $this->channelId,
-                    'text' => $this->buffer,
+                    'text' => $buffer,
                     'thread_ts' => $this->threadTs,
                 ]),
             ]);
@@ -106,13 +117,11 @@ class SlackChannel implements ChannelInterface
                 'channel_id' => $this->channelId,
             ]);
         }
-
-        $this->buffer = '';
     }
 
     private function resolveAgentName(string $channelId): string
     {
-        if ($channelId === '') {
+        if ('' === $channelId) {
             return 'default';
         }
 
@@ -129,6 +138,7 @@ class SlackChannel implements ChannelInterface
                     'channel_id' => $channelId,
                     'error' => $data['error'] ?? 'unknown',
                 ]);
+
                 return 'default';
             }
 
@@ -138,13 +148,13 @@ class SlackChannel implements ChannelInterface
                 'channel_id' => $channelId,
                 'error' => $e->getMessage(),
             ]);
+
             return 'default';
         }
     }
 
     private function cleanText(string $text): string
     {
-        // Supprime les mentions @bot (<@UXXXXXXXX>) du début du message
         return trim(preg_replace('/^<@[A-Z0-9]+>\s*/', '', $text));
     }
 }

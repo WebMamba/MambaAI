@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace MambaAi\Version_2\Controller;
+namespace MambaAi\Controller;
 
-use MambaAi\Version_2\Event\ControllerEvent;
-use MambaAi\Version_2\Message\MambaAIMessage;
+use MambaAi\Event\ControllerEvent;
+use MambaAi\Message\MambaAIMessage;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -17,7 +17,8 @@ class MambaAIController
     public function __construct(
         private EventDispatcherInterface $eventDispatcher,
         private MessageBusInterface $messageBus,
-    ) {}
+    ) {
+    }
 
     #[Route('/mamba-ai')]
     public function index(Request $request): Response
