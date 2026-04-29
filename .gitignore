@@ -3,3 +3,9 @@
 .env.local
 .env.*.local
 .claude/
+knowledge/
+/var/coverage/
+/var/.phpunit.cache/
+/var/.php-cs-fixer.cache
+/var/psalm/
+.php-cs-fixer.cache
