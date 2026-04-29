@@ -39,9 +39,39 @@ services:
         tags:
             - { name: mamba_ai.system_prompt_part, priority: 100 }
 
+    MambaAi\Prompt\Part\ProjectInstructionsContextPart:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+        tags:
+            - { name: mamba_ai.system_prompt_part, priority: 95 }
+
+    MambaAi\Prompt\Part\EnvironmentSystemPart:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+        tags:
+            - { name: mamba_ai.system_prompt_part, priority: 90 }
+
+    MambaAi\Prompt\Part\GitStatusContextPart:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+        tags:
+            - { name: mamba_ai.system_prompt_part, priority: 85 }
+
+    MambaAi\Prompt\Part\DirectoryStructureContextPart:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+        tags:
+            - { name: mamba_ai.system_prompt_part, priority: 80 }
+
     MambaAi\Prompt\Part\MemorySystemPart:
         tags:
             - { name: mamba_ai.system_prompt_part, priority: 75 }
+
+    MambaAi\Prompt\Part\ReadmeContextPart:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+        tags:
+            - { name: mamba_ai.system_prompt_part, priority: 70 }
 
     MambaAi\Prompt\Part\ConversationHistoryPart:
         tags:
