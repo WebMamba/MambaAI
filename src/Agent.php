@@ -1,6 +1,8 @@
 <?php
 
-namespace MambaAi\Version_2;
+declare(strict_types=1);
+
+namespace MambaAi;
 
 use Symfony\AI\Agent\Agent as BaseAgent;
 use Symfony\AI\Agent\Toolbox\AgentProcessor;
@@ -27,12 +29,13 @@ class Agent
         /** @var string[] short class names of parts to exclude for this agent */
         public array $excludedParts = [],
         public bool $memory = true,
-    ) {}
+    ) {
+    }
 
     public function call(Prompt $prompt): ResultInterface
     {
         $processors = [];
-        if ($this->tools !== []) {
+        if ([] !== $this->tools) {
             $processor = new AgentProcessor(new Toolbox($this->tools));
             $processors = [$processor];
         }

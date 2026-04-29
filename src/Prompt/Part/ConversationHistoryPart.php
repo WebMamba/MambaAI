@@ -1,19 +1,23 @@
 <?php
 
-namespace MambaAi\Version_2\Prompt\Part;
+declare(strict_types=1);
 
-use MambaAi\Version_2\Agent;
-use MambaAi\Version_2\Message;
-use MambaAi\Version_2\Prompt\SystemPromptPartInterface;
+namespace MambaAi\Prompt\Part;
+
+use MambaAi\Agent;
+use MambaAi\Message;
+use MambaAi\Prompt\SystemPromptPartInterface;
 use Symfony\Component\Finder\Finder;
 
 final class ConversationHistoryPart implements SystemPromptPartInterface
 {
+    #[\Override]
     public function getTargetAgent(): ?string
     {
         return null;
     }
 
+    #[\Override]
     public function getContent(Agent $agent, Message $message): ?string
     {
         if (!$agent->memory) {
@@ -28,24 +32,24 @@ final class ConversationHistoryPart implements SystemPromptPartInterface
 
         foreach ((new Finder())->files()->in($memoryDir)->name('history.jsonl')->depth(0) as $file) {
             $lines = array_filter(explode("\n", trim($file->getContents())));
-            if ($lines === []) {
+            if ([] === $lines) {
                 return null;
             }
 
             $entries = [];
             foreach ($lines as $line) {
                 $entry = json_decode($line, true);
-                if ($entry !== null) {
+                if (null !== $entry) {
                     $entries[] = $entry;
                 }
             }
 
-            if ($entries === []) {
+            if ([] === $entries) {
                 return null;
             }
 
             $formatted = array_map(
-                fn (array $e) => sprintf('[%s] %s: %s', $e['at'], ucfirst($e['role']), $e['content']),
+                static fn (array $e) => \sprintf('[%s] %s: %s', $e['at'], ucfirst($e['role']), $e['content']),
                 $entries,
             );
 

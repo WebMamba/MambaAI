@@ -1,19 +1,19 @@
-# Skill : Créer un agent
+# Skill: Create an agent
 
-Pour créer un nouvel agent dans mambaAI, utilise la commande :
+To create a new agent in mambaAI, use the command:
 
 ```bash
-php bin/console mamba:agent:create <nom>
+php bin/console mamba:agent:create <name>
 ```
 
-Cela génère automatiquement le dossier `agents/<nom>/` avec tous les fichiers nécessaires.
+This automatically generates the `agents/<name>/` folder with all the required files.
 
-Ensuite tu peux personnaliser :
-- `AGENT.md` — donne-lui son rôle et ses instructions
-- `SOUL.md` — donne-lui une personnalité
-- `config.yaml` — choisis son modèle et ses options
+You can then customize:
+- `AGENT.md` — give it its role and instructions
+- `SOUL.md` — give it a personality
+- `config.yaml` — pick its model and options
 
-Et discuter avec lui :
+And start chatting with it:
 ```bash
-php bin/console mamba:chat <nom>
+php bin/console mamba:chat <name>
 ```

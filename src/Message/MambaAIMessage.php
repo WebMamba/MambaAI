@@ -1,6 +1,8 @@
 <?php
 
-namespace MambaAi\Version_2\Message;
+declare(strict_types=1);
+
+namespace MambaAi\Message;
 
 use Symfony\Component\HttpFoundation\Request;
 

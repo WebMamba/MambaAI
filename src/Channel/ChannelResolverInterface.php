@@ -1,8 +1,10 @@
 <?php
 
-namespace MambaAi\Version_2\Channel;
+declare(strict_types=1);
 
-use MambaAi\Version_2\ChannelInterface;
+namespace MambaAi\Channel;
+
+use MambaAi\ChannelInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 interface ChannelResolverInterface

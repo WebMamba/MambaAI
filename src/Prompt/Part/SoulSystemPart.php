@@ -1,20 +1,24 @@
 <?php
 
-namespace MambaAi\Version_2\Prompt\Part;
+declare(strict_types=1);
 
-use MambaAi\Version_2\Agent;
-use MambaAi\Version_2\Message;
-use MambaAi\Version_2\Prompt\SystemPromptPartInterface;
+namespace MambaAi\Prompt\Part;
+
+use MambaAi\Agent;
+use MambaAi\Message;
+use MambaAi\Prompt\SystemPromptPartInterface;
 
 final class SoulSystemPart implements SystemPromptPartInterface
 {
+    #[\Override]
     public function getTargetAgent(): ?string
     {
         return null;
     }
 
+    #[\Override]
     public function getContent(Agent $agent, Message $message): ?string
     {
-        return $agent->soulPrompt !== '' ? $agent->soulPrompt : null;
+        return '' !== $agent->soulPrompt ? $agent->soulPrompt : null;
     }
 }

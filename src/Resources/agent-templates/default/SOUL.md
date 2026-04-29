@@ -1,3 +1,3 @@
-# Personnalité de {{name}}
+# {{name}}'s personality
 
-Décris ici le ton, le style et la personnalité de cet agent.
+Describe here the tone, style and personality of this agent.

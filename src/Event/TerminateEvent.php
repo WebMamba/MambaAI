@@ -1,9 +1,11 @@
 <?php
 
-namespace MambaAi\Version_2\Event;
+declare(strict_types=1);
 
-use MambaAi\Version_2\Agent;
-use MambaAi\Version_2\Message;
+namespace MambaAi\Event;
+
+use MambaAi\Agent;
+use MambaAi\Message;
 
 class TerminateEvent
 {
@@ -11,5 +13,6 @@ class TerminateEvent
         public array $answers,
         public Agent $agent,
         public Message $userMessage,
-    ) {}
+    ) {
+    }
 }

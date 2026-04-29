@@ -1,17 +1,19 @@
 <?php
 
-namespace MambaAi\Version_2\Event;
+declare(strict_types=1);
 
-use MambaAi\Version_2\Agent;
-use MambaAi\Version_2\Message;
-use MambaAi\Version_2\Prompt;
+namespace MambaAi\Event;
+
+use MambaAi\Agent;
+use MambaAi\Message;
+use MambaAi\Prompt;
 
 class PromptEvent
 {
-
     public function __construct(
         public Prompt $prompt,
         public readonly Agent $agent,
-        public readonly Message $message
-    ) {}
+        public readonly Message $message,
+    ) {
+    }
 }

@@ -1,6 +1,8 @@
 <?php
 
-namespace MambaAi\Version_2;
+declare(strict_types=1);
+
+namespace MambaAi;
 
 interface AgentLoaderInterface
 {

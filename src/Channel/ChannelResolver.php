@@ -1,9 +1,10 @@
 <?php
 
-namespace MambaAi\Version_2\Channel;
+declare(strict_types=1);
 
-use MambaAi\Version_2\ChannelInterface;
-use RuntimeException;
+namespace MambaAi\Channel;
+
+use MambaAi\ChannelInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 class ChannelResolver implements ChannelResolverInterface
@@ -11,8 +12,10 @@ class ChannelResolver implements ChannelResolverInterface
     public function __construct(
         /** @var ChannelInterface[] */
         private iterable $channels,
-    ) {}
+    ) {
+    }
 
+    #[\Override]
     public function resolve(Request $request): ChannelInterface
     {
         foreach ($this->channels as $channel) {
@@ -21,6 +24,6 @@ class ChannelResolver implements ChannelResolverInterface
             }
         }
 
-        throw new RuntimeException('No channel supports this request.');
+        throw new \RuntimeException('No channel supports this request.');
     }
 }

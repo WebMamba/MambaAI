@@ -1,6 +1,8 @@
 <?php
 
-namespace MambaAi\Version_2;
+declare(strict_types=1);
+
+namespace MambaAi;
 
 use Symfony\Component\Finder\Finder;
 
@@ -9,9 +11,11 @@ class AgentLoader implements AgentLoaderInterface
     public function __construct(
         private AgentBuilderInterface $builder,
         private string $agentsDir,
-    ) {}
+    ) {
+    }
 
     /** @return iterable<Agent> */
+    #[\Override]
     public function load(): iterable
     {
         if (!is_dir($this->agentsDir)) {

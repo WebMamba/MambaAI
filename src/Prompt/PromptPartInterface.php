@@ -1,6 +1,8 @@
 <?php
 
-namespace MambaAi\Version_2\Prompt;
+declare(strict_types=1);
+
+namespace MambaAi\Prompt;
 
 interface PromptPartInterface
 {

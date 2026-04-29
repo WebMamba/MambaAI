@@ -1,9 +1,12 @@
 <?php
 
-namespace MambaAi\Version_2\Command;
+declare(strict_types=1);
+
+namespace MambaAi\Command;
 
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Exception\InvalidArgumentException;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\ChoiceQuestion;
@@ -17,9 +20,9 @@ class SetupCommand extends Command
 
     private const MODELS = [
         'anthropic' => [
-            'claude-sonnet-4-5' => 'Claude Sonnet 4.5 — rapide et équilibré (recommandé)',
-            'claude-opus-4-5'   => 'Claude Opus 4.5 — le plus puissant',
-            'claude-haiku-4-5'  => 'Claude Haiku 4.5 — le plus rapide et économique',
+            'claude-sonnet-4-5' => 'Claude Sonnet 4.5 — fast and balanced (recommended)',
+            'claude-opus-4-5' => 'Claude Opus 4.5 — the most powerful',
+            'claude-haiku-4-5' => 'Claude Haiku 4.5 — fastest and cheapest',
         ],
     ];
 
@@ -28,35 +31,35 @@ class SetupCommand extends Command
         parent::__construct();
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
 
-        $io->title('Configuration de mambaAI');
-
-        $helper = $this->getHelper('question');
+        $io->title('mambaAI configuration');
 
         // Provider
-        $providerQuestion = new ChoiceQuestion('Quel provider LLM veux-tu utiliser ?', ['anthropic'], 'anthropic');
-        $provider = $helper->ask($input, $output, $providerQuestion);
+        $providerQuestion = new ChoiceQuestion('Which LLM provider do you want to use?', ['anthropic'], 'anthropic');
+        $provider = (string) $io->askQuestion($providerQuestion);
 
         // API Key
-        $keyQuestion = new Question(sprintf('Clé API %s : ', ucfirst($provider)));
+        $keyQuestion = new Question(\sprintf('%s API key: ', ucfirst($provider)));
         $keyQuestion->setHidden(true);
-        $keyQuestion->setValidator(function (?string $value): string {
-            if (empty(trim((string) $value))) {
-                throw new \RuntimeException('La clé API ne peut pas être vide.');
+        $keyQuestion->setValidator(static function (?string $value): string {
+            if (null === $value || '' === trim($value)) {
+                throw new InvalidArgumentException('The API key cannot be empty.');
             }
+
             return $value;
         });
-        $apiKey = $helper->ask($input, $output, $keyQuestion);
+        $apiKey = (string) $io->askQuestion($keyQuestion);
 
         // Model
         $models = array_keys(self::MODELS[$provider]);
         $modelLabels = array_values(self::MODELS[$provider]);
-        $modelQuestion = new ChoiceQuestion('Quel modèle par défaut ?', $modelLabels, 0);
-        $modelLabel = $helper->ask($input, $output, $modelQuestion);
-        $model = $models[array_search($modelLabel, $modelLabels)];
+        $modelQuestion = new ChoiceQuestion('Which default model?', $modelLabels, 0);
+        $modelLabel = (string) $io->askQuestion($modelQuestion);
+        $model = $models[array_search($modelLabel, $modelLabels, true)];
 
         // Write .env
         $this->writeEnvKey($provider, $apiKey, $io);
@@ -64,9 +67,9 @@ class SetupCommand extends Command
         // Write mamba_ai.yaml
         $this->writeConfig($provider, $model, $io);
 
-        $io->success('mambaAI est configuré !');
+        $io->success('mambaAI is configured!');
         $io->text([
-            'Tu peux maintenant parler à tes agents :',
+            'You can now talk to your agents:',
             '  <info>php bin/console mamba:chat mambi</info>',
         ]);
 
@@ -75,33 +78,33 @@ class SetupCommand extends Command
 
     private function writeEnvKey(string $provider, string $apiKey, SymfonyStyle $io): void
     {
-        $envFile = $this->projectDir . '/.env.local';
+        $envFile = $this->projectDir.'/.env.local';
         $envKey = match ($provider) {
             'anthropic' => 'ANTHROPIC_API_KEY',
-            default     => strtoupper($provider) . '_API_KEY',
+            default => strtoupper($provider).'_API_KEY',
         };
 
-        $line = sprintf('%s=%s', $envKey, $apiKey);
+        $line = \sprintf('%s=%s', $envKey, $apiKey);
         $existing = file_exists($envFile) ? file_get_contents($envFile) : '';
 
-        if (str_contains($existing, $envKey . '=')) {
-            $updated = preg_replace('/^' . $envKey . '=.*/m', $line, $existing);
+        if (str_contains($existing, $envKey.'=')) {
+            $updated = preg_replace('/^'.$envKey.'=.*/m', $line, $existing);
             file_put_contents($envFile, $updated);
         } else {
-            file_put_contents($envFile, $existing . "\n" . $line . "\n");
+            file_put_contents($envFile, $existing."\n".$line."\n");
         }
 
-        $io->text(sprintf('  → %s ajouté dans <info>.env.local</info>', $envKey));
+        $io->text(\sprintf('  → %s added to <info>.env.local</info>', $envKey));
     }
 
     private function writeConfig(string $provider, string $model, SymfonyStyle $io): void
     {
         $platformService = match ($provider) {
             'anthropic' => 'anthropic.platform',
-            default     => $provider . '.platform',
+            default => $provider.'.platform',
         };
 
-        $configFile = $this->projectDir . '/' . self::CONFIG_FILE;
+        $configFile = $this->projectDir.'/'.self::CONFIG_FILE;
         $agentsDir = '%kernel.project_dir%/agents';
 
         $yaml = <<<YAML
@@ -111,9 +114,9 @@ mamba_ai:
     default_model: '{$model}'
 YAML;
 
-        @mkdir(dirname($configFile), recursive: true);
-        file_put_contents($configFile, $yaml . "\n");
+        @mkdir(\dirname($configFile), recursive: true);
+        file_put_contents($configFile, $yaml."\n");
 
-        $io->text(sprintf('  → <info>%s</info> créé avec le modèle <info>%s</info>', self::CONFIG_FILE, $model));
+        $io->text(\sprintf('  → <info>%s</info> created with model <info>%s</info>', self::CONFIG_FILE, $model));
     }
 }

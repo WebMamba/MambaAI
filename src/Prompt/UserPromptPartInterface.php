@@ -1,9 +1,11 @@
 <?php
 
-namespace MambaAi\Version_2\Prompt;
+declare(strict_types=1);
 
-use MambaAi\Version_2\Agent;
-use MambaAi\Version_2\Message;
+namespace MambaAi\Prompt;
+
+use MambaAi\Agent;
+use MambaAi\Message;
 use Symfony\AI\Platform\Message\Content\Text;
 
 interface UserPromptPartInterface extends PromptPartInterface

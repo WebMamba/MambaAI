@@ -1,6 +1,8 @@
 <?php
 
-namespace MambaAi\Version_2;
+declare(strict_types=1);
+
+namespace MambaAi;
 
 use Symfony\AI\Platform\Result\ResultInterface;
 use Symfony\AI\Platform\Result\Stream\Delta\TextDelta;
@@ -13,10 +15,12 @@ use Symfony\AI\Platform\Result\StreamResult;
 
 class DefaultStreamMapper implements StreamMapperInterface
 {
+    #[\Override]
     public function map(string $agentName, ResultInterface $result): iterable
     {
         if (!$result instanceof StreamResult) {
             yield new Message(agent: $agentName, content: (string) $result->getContent(), type: MessageType::Text);
+
             return;
         }
 
@@ -45,7 +49,7 @@ class DefaultStreamMapper implements StreamMapperInterface
                     yield new Message(agent: $agentName, content: $delta->getName(), type: MessageType::ToolCall, context: ['phase' => 'start', 'id' => $id]);
                 } elseif ($delta instanceof ToolInputDelta) {
                     $id = $delta->getId();
-                    $toolInputBuffers[$id] = ($toolInputBuffers[$id] ?? '') . $delta->getPartialJson();
+                    $toolInputBuffers[$id] = ($toolInputBuffers[$id] ?? '').$delta->getPartialJson();
                     yield new Message(agent: $agentName, content: $delta->getName(), type: MessageType::ToolCall, context: ['phase' => 'input', 'id' => $id, 'args' => $toolInputBuffers[$id]]);
                 } elseif ($delta instanceof ToolCallComplete) {
                     // Normally replaced by StreamListener, but handle the raw case too

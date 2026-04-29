@@ -1,23 +1,24 @@
 <?php
 
-namespace MambaAi\Version_2\DependencyInjection;
+declare(strict_types=1);
 
-use MambaAi\Version_2\AgentBuilderInterface;
-use MambaAi\Version_2\AgentLoader;
-use MambaAi\Version_2\AgentLoaderInterface;
-use MambaAi\Version_2\AgentResolver;
-use MambaAi\Version_2\AgentResolverInterface;
-use MambaAi\Version_2\Channel\ChannelResolver;
-use MambaAi\Version_2\Channel\ChannelResolverInterface;
-use MambaAi\Version_2\Channel\SlackChannel;
-use MambaAi\Version_2\Event\ControllerEvent;
-use MambaAi\Version_2\EventListener\SlackChallengeListener;
-use MambaAi\Version_2\FolderAgentBuilder;
-use MambaAi\Version_2\StreamMapperInterface;
-use MambaAi\Version_2\Prompt\SystemPromptPartInterface;
-use MambaAi\Version_2\Prompt\UserPromptPartInterface;
-use MambaAi\Version_2\PromptBuilder;
-use MambaAi\Version_2\PromptBuilderInterface;
+namespace MambaAi\DependencyInjection;
+
+use MambaAi\AgentBuilderInterface;
+use MambaAi\AgentLoader;
+use MambaAi\AgentLoaderInterface;
+use MambaAi\AgentResolver;
+use MambaAi\AgentResolverInterface;
+use MambaAi\Channel\ChannelResolver;
+use MambaAi\Channel\ChannelResolverInterface;
+use MambaAi\Channel\SlackChannel;
+use MambaAi\Event\ControllerEvent;
+use MambaAi\EventListener\SlackChallengeListener;
+use MambaAi\FolderAgentBuilder;
+use MambaAi\Prompt\SystemPromptPartInterface;
+use MambaAi\Prompt\UserPromptPartInterface;
+use MambaAi\PromptBuilder;
+use MambaAi\PromptBuilderInterface;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
@@ -27,9 +28,10 @@ use Symfony\Component\DependencyInjection\Reference;
 
 class MambaAiExtension extends Extension
 {
+    #[\Override]
     public function load(array $configs, ContainerBuilder $container): void
     {
-        $loader = new YamlFileLoader($container, new FileLocator(__DIR__ . '/../../config'));
+        $loader = new YamlFileLoader($container, new FileLocator(__DIR__.'/../../config'));
         $loader->load('services.yaml');
 
         $configuration = new Configuration();

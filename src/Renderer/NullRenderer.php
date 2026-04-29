@@ -1,9 +1,11 @@
 <?php
 
-namespace MambaAi\Version_2\Renderer;
+declare(strict_types=1);
 
-use MambaAi\Version_2\Message;
-use MambaAi\Version_2\MessageType;
+namespace MambaAi\Renderer;
+
+use MambaAi\Message;
+use MambaAi\MessageType;
 
 /**
  * Minimal renderer: passes text through, drops everything else.
@@ -11,12 +13,13 @@ use MambaAi\Version_2\MessageType;
  */
 class NullRenderer implements MessageRendererInterface
 {
+    #[\Override]
     public function render(Message $message): ?string
     {
         return match ($message->type) {
-            MessageType::Text  => $message->content,
-            MessageType::Error => '[Erreur] ' . $message->content,
-            default            => null,
+            MessageType::Text => $message->content,
+            MessageType::Error => '[Error] '.$message->content,
+            default => null,
         };
     }
 }

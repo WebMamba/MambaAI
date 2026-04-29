@@ -1,15 +1,8 @@
 <?php
 
-namespace MambaAi\Version_2;
+declare(strict_types=1);
 
-enum MessageType: string
-{
-    case Text        = 'text';
-    case Thinking    = 'thinking';
-    case ToolCall    = 'tool_call';
-    case ToolResult  = 'tool_result';
-    case Error       = 'error';
-}
+namespace MambaAi;
 
 class Message
 {
@@ -18,5 +11,6 @@ class Message
         public string $content,
         public array $context = [],
         public MessageType $type = MessageType::Text,
-    ) {}
+    ) {
+    }
 }

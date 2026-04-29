@@ -1,12 +1,15 @@
 <?php
 
-namespace MambaAi\Version_2\Event;
+declare(strict_types=1);
 
-use MambaAi\Version_2\Message;
+namespace MambaAi\Event;
+
+use MambaAi\Message;
 
 class MessageEvent
 {
     public function __construct(
-        public Message $message
-    ) {}
+        public Message $message,
+    ) {
+    }
 }

@@ -1,8 +1,10 @@
 <?php
 
-namespace MambaAi\Version_2;
+declare(strict_types=1);
 
-use MambaAi\Version_2\Tool\MemoryWriteTool;
+namespace MambaAi;
+
+use MambaAi\Tool\MemoryWriteTool;
 use Symfony\AI\Agent\Toolbox\Attribute\AsTool;
 use Symfony\AI\Platform\PlatformInterface;
 use Symfony\Component\Finder\Finder;
@@ -14,8 +16,10 @@ class FolderAgentBuilder implements AgentBuilderInterface
         private PlatformInterface $platform,
         private string $defaultModel,
         private bool $defaultStream = true,
-    ) {}
+    ) {
+    }
 
+    #[\Override]
     public function build(string $name, string $path): Agent
     {
         $config = $this->readYaml($path, 'config.yaml');

@@ -1,11 +1,12 @@
 # {{name}}
 
-Décris ici qui est cet agent, son rôle, et ce qu'il sait faire.
+Describe who this agent is, its role, and what it can do.
 
-## Exemples de questions auxquelles il peut répondre
+## Example questions it can answer
 
 - ...
 
-## Comment il répond
+## How it responds
 
+- Always responds in English.
 - ...

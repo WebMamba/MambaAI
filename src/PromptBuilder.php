@@ -1,12 +1,14 @@
 <?php
 
-namespace MambaAi\Version_2;
+declare(strict_types=1);
 
-use MambaAi\Version_2\Event\BuildOptionPrompt;
-use MambaAi\Version_2\Event\BuildSystemPrompt;
-use MambaAi\Version_2\Event\BuildUserPrompt;
-use MambaAi\Version_2\Prompt\SystemPromptPartInterface;
-use MambaAi\Version_2\Prompt\UserPromptPartInterface;
+namespace MambaAi;
+
+use MambaAi\Event\BuildOptionPrompt;
+use MambaAi\Event\BuildSystemPrompt;
+use MambaAi\Event\BuildUserPrompt;
+use MambaAi\Prompt\SystemPromptPartInterface;
+use MambaAi\Prompt\UserPromptPartInterface;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Symfony\AI\Platform\Message\MessageBag;
 use Symfony\AI\Platform\Message\SystemMessage;
@@ -22,11 +24,12 @@ class PromptBuilder implements PromptBuilderInterface
         private EventDispatcherInterface $dispatcher,
         private iterable $systemParts,
         private iterable $userParts,
-    ) {}
+    ) {
+    }
 
+    #[\Override]
     public function build(Agent $agent, Message $message): Prompt
     {
-
         $systemMessages = $this->buildSystemPrompt($agent, $message);
         $event = $this->dispatcher->dispatch(new BuildSystemPrompt($agent, $message, $systemMessages));
         $systemMessages = $event->messages;
@@ -51,14 +54,14 @@ class PromptBuilder implements PromptBuilderInterface
                 continue;
             }
             $content = $part->getContent($agent, $message);
-            if ($content !== null && $content !== '') {
+            if (null !== $content && '' !== $content) {
                 $systemContributions[] = $content;
             }
         }
 
         return new MessageBag(
             new SystemMessage(
-                $systemContributions !== []
+                [] !== $systemContributions
                     ? implode("\n\n", $systemContributions)
                     : 'You are a helpful assistant.'
             ),
@@ -78,14 +81,8 @@ class PromptBuilder implements PromptBuilderInterface
             }
         }
 
-        if ($userBlocks === []) {
-            throw new \LogicException(
-                sprintf(
-                    'No user prompt parts produced any content for agent "%s". '.
-                    'Register at least one UserPromptPartInterface service.',
-                    $agent->name
-                )
-            );
+        if ([] === $userBlocks) {
+            throw new \LogicException(\sprintf('No user prompt parts produced any content for agent "%s". Register at least one UserPromptPartInterface service.', $agent->name));
         }
 
         return new MessageBag(new UserMessage(...$userBlocks));
@@ -94,12 +91,12 @@ class PromptBuilder implements PromptBuilderInterface
     private function partApplies(SystemPromptPartInterface|UserPromptPartInterface $part, Agent $agent): bool
     {
         $target = $part->getTargetAgent();
-        if ($target !== null && $target !== $agent->name) {
+        if (null !== $target && $target !== $agent->name) {
             return false;
         }
 
         $shortName = substr(strrchr($part::class, '\\'), 1);
 
-        return !in_array($shortName, $agent->excludedParts, true);
+        return !\in_array($shortName, $agent->excludedParts, true);
     }
 }

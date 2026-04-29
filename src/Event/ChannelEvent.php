@@ -1,12 +1,15 @@
 <?php
 
-namespace MambaAi\Version_2\Event;
+declare(strict_types=1);
 
-use MambaAi\Version_2\ChannelInterface;
+namespace MambaAi\Event;
+
+use MambaAi\ChannelInterface;
 
 class ChannelEvent
 {
     public function __construct(
-        public ChannelInterface $channel
-    ) {}
+        public ChannelInterface $channel,
+    ) {
+    }
 }

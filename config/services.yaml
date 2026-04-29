@@ -1,115 +1,119 @@
 services:
-    MambaAi\Version_2\DefaultStreamMapper: ~
+    MambaAi\DefaultStreamMapper: ~
 
-    MambaAi\Version_2\StreamMapperInterface: '@MambaAi\Version_2\DefaultStreamMapper'
+    MambaAi\StreamMapperInterface: '@MambaAi\DefaultStreamMapper'
 
-    MambaAi\Version_2\AgentKernel:
+    MambaAi\AgentKernel:
         arguments:
             - '@event_dispatcher'
-            - '@MambaAi\Version_2\Channel\ChannelResolverInterface'
-            - '@MambaAi\Version_2\AgentResolverInterface'
-            - '@MambaAi\Version_2\PromptBuilderInterface'
-            - '@MambaAi\Version_2\StreamMapperInterface'
+            - '@MambaAi\Channel\ChannelResolverInterface'
+            - '@MambaAi\AgentResolverInterface'
+            - '@MambaAi\PromptBuilderInterface'
+            - '@MambaAi\StreamMapperInterface'
 
-    MambaAi\Version_2\AgentLoader:
+    MambaAi\AgentLoader:
         arguments:
-            $builder: '@MambaAi\Version_2\AgentBuilderInterface'
+            $builder: '@MambaAi\AgentBuilderInterface'
             $agentsDir: '%mamba_ai.agents_dir%'
 
-    MambaAi\Version_2\AgentResolver:
+    MambaAi\AgentResolver:
         arguments:
-            $loader: '@MambaAi\Version_2\AgentLoaderInterface'
+            $loader: '@MambaAi\AgentLoaderInterface'
 
-    MambaAi\Version_2\PromptBuilder:
+    MambaAi\PromptBuilder:
         arguments:
             $dispatcher: '@event_dispatcher'
             $systemParts: !tagged_iterator mamba_ai.system_prompt_part
             $userParts: !tagged_iterator mamba_ai.user_prompt_part
 
     # --- Default system prompt parts ---
-    MambaAi\Version_2\Prompt\Part\AgentSystemPart:
+    MambaAi\Prompt\Part\AgentSystemPart:
         tags:
             - { name: mamba_ai.system_prompt_part, priority: 300 }
 
-    MambaAi\Version_2\Prompt\Part\SoulSystemPart:
+    MambaAi\Prompt\Part\SoulSystemPart:
         tags:
             - { name: mamba_ai.system_prompt_part, priority: 200 }
 
-    MambaAi\Version_2\Prompt\Part\KnowledgeSystemPart:
+    MambaAi\Prompt\Part\KnowledgeSystemPart:
         tags:
             - { name: mamba_ai.system_prompt_part, priority: 100 }
 
-    MambaAi\Version_2\Prompt\Part\MemorySystemPart:
+    MambaAi\Prompt\Part\MemorySystemPart:
         tags:
             - { name: mamba_ai.system_prompt_part, priority: 75 }
 
-    MambaAi\Version_2\Prompt\Part\ConversationHistoryPart:
+    MambaAi\Prompt\Part\ConversationHistoryPart:
         tags:
             - { name: mamba_ai.system_prompt_part, priority: 60 }
 
-    MambaAi\Version_2\Prompt\Part\SkillsSystemPart:
+    MambaAi\Prompt\Part\SkillsSystemPart:
         tags:
             - { name: mamba_ai.system_prompt_part, priority: 50 }
 
-    MambaAi\Version_2\Prompt\Part\MemoryInstructionSystemPart:
+    MambaAi\Prompt\Part\MemoryInstructionSystemPart:
         tags:
             - { name: mamba_ai.system_prompt_part, priority: 25 }
 
     # --- Default user prompt parts ---
-    MambaAi\Version_2\Prompt\Part\MessageContentPart:
+    MambaAi\Prompt\Part\MessageContentPart:
         tags:
             - { name: mamba_ai.user_prompt_part, priority: 200 }
 
-    MambaAi\Version_2\Prompt\Part\CurrentDatePart:
+    MambaAi\Prompt\Part\CurrentDatePart:
         tags:
             - { name: mamba_ai.system_prompt_part, priority: 20 }
 
-    MambaAi\Version_2\Message\MambaAIMessageHandler:
+    MambaAi\Message\MambaAIMessageHandler:
         arguments:
-            $agentKernel: '@MambaAi\Version_2\AgentKernel'
+            $agentKernel: '@MambaAi\AgentKernel'
+            $channelResolver: '@MambaAi\Channel\ChannelResolverInterface'
         tags:
             - { name: messenger.message_handler }
 
-    MambaAi\Version_2\Controller\MambaAIController:
+    MambaAi\Controller\MambaAIController:
         arguments:
             $eventDispatcher: '@event_dispatcher'
             $messageBus: '@Symfony\Component\Messenger\MessageBusInterface'
         tags:
             - { name: controller.service_arguments }
 
-    MambaAi\Version_2\EventListener\ConversationHistoryListener:
+    MambaAi\EventListener\ConversationHistoryListener:
         tags:
-            - { name: kernel.event_listener, event: MambaAi\Version_2\Event\TerminateEvent }
+            - { name: kernel.event_listener, event: MambaAi\Event\TerminateEvent }
 
-    MambaAi\Version_2\Channel\CliChannel:
+    MambaAi\Channel\CliChannel:
         tags:
             - { name: mamba_ai.channel }
 
-    MambaAi\Version_2\Channel\ChannelResolver:
+    MambaAi\Channel\ChannelResolver:
         arguments:
             - !tagged_iterator mamba_ai.channel
 
-    MambaAi\Version_2\Command\ChatCommand:
+    MambaAi\Command\ChatCommand:
         arguments:
-            - '@MambaAi\Version_2\AgentKernel'
+            $kernel: '@MambaAi\AgentKernel'
+            $agentResolver: '@MambaAi\AgentResolverInterface'
+            $agentLoader: '@MambaAi\AgentLoaderInterface'
         tags:
             - { name: console.command }
 
-    MambaAi\Version_2\Command\WelcomeCommand:
+    MambaAi\Command\WelcomeCommand:
         arguments:
             $agentsDir: '%mamba_ai.agents_dir%'
             $projectDir: '%kernel.project_dir%'
         tags:
             - { name: console.command }
 
-    MambaAi\Version_2\Command\SetupCommand:
+    MambaAi\Command\SetupCommand:
         arguments:
             $projectDir: '%kernel.project_dir%'
         tags:
             - { name: console.command }
 
-    MambaAi\Version_2\Command\AgentCreateCommand:
+    MambaAi\Command\AgentCreateCommand:
         arguments:
             $agentsDir: '%mamba_ai.agents_dir%'
         tags:
             - { name: console.command }
+

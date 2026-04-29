@@ -1,6 +1,8 @@
 <?php
 
-namespace MambaAi\Version_2\Event;
+declare(strict_types=1);
+
+namespace MambaAi\Event;
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -9,8 +11,9 @@ class ControllerEvent
 {
     public function __construct(
         private Request $request,
-        private ?Response $response = null
-    ) {}
+        private ?Response $response = null,
+    ) {
+    }
 
     public function getRequest(): Request
     {

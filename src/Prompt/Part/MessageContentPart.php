@@ -1,19 +1,23 @@
 <?php
 
-namespace MambaAi\Version_2\Prompt\Part;
+declare(strict_types=1);
 
-use MambaAi\Version_2\Agent;
-use MambaAi\Version_2\Message;
-use MambaAi\Version_2\Prompt\UserPromptPartInterface;
+namespace MambaAi\Prompt\Part;
+
+use MambaAi\Agent;
+use MambaAi\Message;
+use MambaAi\Prompt\UserPromptPartInterface;
 use Symfony\AI\Platform\Message\Content\Text;
 
 final class MessageContentPart implements UserPromptPartInterface
 {
+    #[\Override]
     public function getTargetAgent(): ?string
     {
         return null;
     }
 
+    #[\Override]
     public function getBlocks(Agent $agent, Message $message): array
     {
         return [new Text($message->content)];

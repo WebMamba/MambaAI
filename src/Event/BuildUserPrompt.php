@@ -1,9 +1,11 @@
 <?php
 
-namespace MambaAi\Version_2\Event;
+declare(strict_types=1);
 
-use MambaAi\Version_2\Agent;
-use MambaAi\Version_2\Message;
+namespace MambaAi\Event;
+
+use MambaAi\Agent;
+use MambaAi\Message;
 use Symfony\AI\Platform\Message\MessageBag;
 
 class BuildUserPrompt
@@ -12,5 +14,6 @@ class BuildUserPrompt
         public Agent $agent,
         public Message $message,
         public MessageBag $messages,
-    ) {}
+    ) {
+    }
 }

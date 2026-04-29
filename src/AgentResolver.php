@@ -1,8 +1,8 @@
 <?php
 
-namespace MambaAi\Version_2;
+declare(strict_types=1);
 
-use RuntimeException;
+namespace MambaAi;
 
 class AgentResolver implements AgentResolverInterface
 {
@@ -10,8 +10,11 @@ class AgentResolver implements AgentResolverInterface
     private array $agents = [];
     private bool $loaded = false;
 
-    public function __construct(private AgentLoaderInterface $loader) {}
+    public function __construct(private AgentLoaderInterface $loader)
+    {
+    }
 
+    #[\Override]
     public function resolve(Message $message): Agent
     {
         if (!$this->loaded) {
@@ -23,8 +26,6 @@ class AgentResolver implements AgentResolverInterface
 
         return $this->agents[$message->agent]
             ?? $this->agents['default']
-            ?? throw new RuntimeException(
-                sprintf('No agent "%s" and no "default" agent configured.', $message->agent)
-            );
+            ?? throw new \RuntimeException(\sprintf('No agent "%s" and no "default" agent configured.', $message->agent));
     }
 }

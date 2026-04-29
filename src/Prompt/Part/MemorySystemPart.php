@@ -1,19 +1,23 @@
 <?php
 
-namespace MambaAi\Version_2\Prompt\Part;
+declare(strict_types=1);
 
-use MambaAi\Version_2\Agent;
-use MambaAi\Version_2\Message;
-use MambaAi\Version_2\Prompt\SystemPromptPartInterface;
+namespace MambaAi\Prompt\Part;
+
+use MambaAi\Agent;
+use MambaAi\Message;
+use MambaAi\Prompt\SystemPromptPartInterface;
 use Symfony\Component\Finder\Finder;
 
 final class MemorySystemPart implements SystemPromptPartInterface
 {
+    #[\Override]
     public function getTargetAgent(): ?string
     {
         return null;
     }
 
+    #[\Override]
     public function getContent(Agent $agent, Message $message): ?string
     {
         if (!$agent->memory) {
@@ -28,7 +32,7 @@ final class MemorySystemPart implements SystemPromptPartInterface
 
         foreach ((new Finder())->files()->in($memoryDir)->name('MEMORY.md')->depth(0) as $file) {
             $content = trim($file->getContents());
-            if ($content === '') {
+            if ('' === $content) {
                 return null;
             }
 

@@ -1,8 +1,10 @@
 <?php
 
-namespace MambaAi\Version_2\EventListener;
+declare(strict_types=1);
 
-use MambaAi\Version_2\Event\ControllerEvent;
+namespace MambaAi\EventListener;
+
+use MambaAi\Event\ControllerEvent;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -13,7 +15,8 @@ final class SlackChallengeListener
     public function __construct(
         private string $signingSecret,
         private LoggerInterface $logger = new NullLogger(),
-    ) {}
+    ) {
+    }
 
     public function __invoke(ControllerEvent $event): void
     {
@@ -29,6 +32,7 @@ final class SlackChallengeListener
         if (abs(time() - (int) $timestamp) > 300) {
             $this->logger->warning('[Slack] Request rejected: timestamp too old', ['timestamp' => $timestamp]);
             $event->setResponse(new Response('Request too old.', Response::HTTP_UNAUTHORIZED));
+
             return;
         }
 
@@ -38,6 +42,7 @@ final class SlackChallengeListener
         if (!hash_equals($expected, $signature)) {
             $this->logger->error('[Slack] Request rejected: invalid signature');
             $event->setResponse(new Response('Invalid signature.', Response::HTTP_UNAUTHORIZED));
+
             return;
         }
 
@@ -46,6 +51,7 @@ final class SlackChallengeListener
         if (($payload['type'] ?? '') === 'url_verification') {
             $this->logger->info('[Slack] URL verification challenge');
             $event->setResponse(new JsonResponse(['challenge' => $payload['challenge'] ?? '']));
+
             return;
         }
 
@@ -62,6 +68,7 @@ final class SlackChallengeListener
                 'has_user' => isset($slackEvent['user']),
             ]);
             $event->setResponse(new Response('', Response::HTTP_OK));
+
             return;
         }
 
